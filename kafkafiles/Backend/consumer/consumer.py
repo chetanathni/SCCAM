@@ -13,6 +13,14 @@ import json
 #Change to External IP
 bootstrap_servers = ['34.71.243.135:9092']
 
+def docker_data(docker_image):
+
+    topicName3 ='InputImage'
+    producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
+    while(1):
+        docker_text=docker_image.get()
+        producer.send(topicName3 , docker_text.encode('utf-8'))
+        producer.flush()
 
 def user_ch(in_pr):
 
@@ -73,6 +81,10 @@ def dash_thread(q,r,t,out_pr):
         dcc.Graph(id='indicator-graphic',style={'width':700}),
         dcc.Interval(id='graph-update',interval=5100),
         dcc.Interval(id='gauge-update',interval=5000),
+        html.Div([
+        dcc.Input(id="input_text", type="text", placeholder="Enter the filename", debounce=True),
+        html.Div(id="output"),]),
+
         html.Div(id="system_usage", children=[
             ] ),
 
@@ -125,23 +137,31 @@ paper_bgcolor = 'rgba(0,0,0,0)',)}
         disk_usage = l_items[3]
         return  daq.Gauge(showCurrentValue=True,id='my-gauge',label="CPU",units="%",max=100,min=0,value=cpu_usage),daq.Gauge(showCurrentValue=True,id='my-gauge2',label="Disk",units="%",max=100,min=0,value=disk_usage ),html.P('Total RAM :{}'.format(total_ram)) , html.P('Used RAM :{}'.format(used_ram))
 
+    @app.callback(Output("output", "children"), [Input("input_text", "value")],)
+    def update_filename(input_text):
+        docker_image.put(input_text)
+        return u'Input File:- {}'.format(input_text)
+
 if __name__ == "__main__":
 
     # creating thread 
     q = queue.Queue()
     r = queue.Queue()
     t = queue.Queue()
+    docker_image = queue.Queue()
     pr = queue.Queue()
     r.put('Bangalore North')
     pr.put('Bangalore North')
 
-    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr))
+    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,docker_image))
     t2 = threading.Thread(target=graph_info ,args=(q,t))
     t3 = threading.Thread(target=user_ch , args=(pr,))
+    t4 = threading.Thread(target=docker_data , args=(docker_image,))
 
     t1.start()
     t3.start()
     t2.start()
+    t4.start()
     
 
     app.run_server(debug=True,host='0.0.0.0')
