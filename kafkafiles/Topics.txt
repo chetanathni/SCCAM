@@ -1,0 +1,23 @@
+
+    
+    Producer/Consumer               Topic               To                  From                      Purpose
+Edge :    
+
+    Producer                        sample              Intermediate        -                          Sned Data from sensors
+    Consumer                        FileName            -                   Intermediate
+
+Intermediate :
+
+    Producer                        filtered            Backend             -                          Send filtered data
+    Producer                        FileName            Edge                -                          Send input dockerfile
+    Consumer                        sample              -                   Edge                       Receive all the data
+    Consumer                        InputImage          -                   Backend                    Receive the input dockerfile
+    Consumer                        LocationReq         -                   Backend                    Receive the graph Location
+
+Backend :
+
+    Producer                        LocationReq         Intermediate        -                          Send graph Location
+    Producer                        InputImage          Intermediate        -                          Send DockerImage link
+    Consumer                        filtered            -                   Intermediate               Receive filtered data
+    
+
