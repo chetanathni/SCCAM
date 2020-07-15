@@ -1,4 +1,6 @@
 sudo systemctl start docker
+sudo docker rm $(sudo docker ps -aq)
+sudo dokcker rmi $(sudo docker images)
 cd kafka-broker
 sudo docker compose up -d
 cd ..
