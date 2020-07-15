@@ -12,6 +12,22 @@ sending_server = ['kafka:9092']
 GetArea=''
 GetCity=''
 #act as consumer to get anantha's data from all VMs sending to a particular topic and set it to variable data
+
+def GetFile(r):
+        InputTopicName = 'InputImage'
+        consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
+        consumerFile.subscribe(InputTopicName)
+        for Filename in consumerFile:
+                Docker_image=(Filename.value).decode('utf-8')
+                print(Docker_image)
+
+def SendFile(r):
+        InputTopicName = 'FileName'
+        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
+        Dockerfile=r.get()
+        producer.send(InputTopicName,Dockerfile)
+        producer.flush()
+                
 def GetData(q):
         #global SentCity,SentArea,SentData
         DataTopicName = 'sample'
@@ -32,6 +48,7 @@ def GetData(q):
                                                         print("Data forwarded to backend ")
                                                         print(datalist)
 #push to db
+
 #act as consumer to get location from backend
 def GetLoc():
         global GetCity,GetArea
@@ -50,20 +67,22 @@ def filters(q):
                         producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
                         SentData=q.get()
                         producer.send(sendingTopic,SentData)
+                        producer.flush()
                         print("Sent Data is ")
                         print(SentData)
                         print("\n\n\n")
 if __name__ == "__main__":
     # creating thread
         q = queue.Queue()
+        r = queue.Queue()
         t1 = threading.Thread(target=GetData ,args=(q,))
         t2 = threading.Thread(target=filters ,args=(q,))
         t3 = threading.Thread(target=GetLoc)
-    # starting thread 1
+        t4 = threading.Thread(target=GetFile ,args=(r,))
+
         t1.start()
         t2.start()
         t3.start()
-    # starting thread 2
-    # wait until thread 1 is completely executed
-    # both threads completely executed
+        t4.start()
+
 
