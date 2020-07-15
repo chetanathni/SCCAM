@@ -125,7 +125,7 @@ def dash_thread(q,r,t,out_pr):
         marker={'color': 'red',})
 
         return {'data': [data],'layout' : go.Layout(xaxis={'title':'TIME', 'showgrid':False,'range':[min(X),max(X)],'color':'black'},yaxis={'range':[min(Y),max(Y)],'title':'PPM', 'showgrid':False,'color':'black'},plot_bgcolor = 'rgba(0,0,0,0)',
-paper_bgcolor = 'rgba(0,0,0,0)',)}
+paper_bgcolor = 'rgba(0,0,0,0)',)},"Fetching Real-time data"
 
 
     @app.callback(Output('system_usage', 'children'),[Input(component_id='gauge-update',component_property='n_intervals')])
