@@ -10,7 +10,7 @@ from collections import deque
 from kafka import KafkaConsumer,KafkaProducer
 import threading ,queue
 import json
-#Change to External IP
+
 bootstrap_servers = ['34.71.243.135:9092']
 
 def docker_data(docker_image):
