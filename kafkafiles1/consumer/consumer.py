@@ -11,7 +11,7 @@ from kafka import KafkaConsumer,KafkaProducer
 import threading ,queue
 import json
 
-bootstrap_servers = ['34.71.243.135:9092']
+bootstrap_servers = ['kafka:9092']
 
 def docker_data(docker_image):
 
@@ -51,7 +51,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-def dash_thread(q,r,t,out_pr):
+def dash_thread(q,r,t,out_pr,docker_image):
 
 
     X = deque(maxlen=20)
@@ -101,8 +101,7 @@ def dash_thread(q,r,t,out_pr):
 
         
 
-    @app.callback(Output('indicator-graphic', 'figure'),Output("loading-output-1", "children"),[Input('xaxis-column', 'value'),Input('graph-update', 'n_intervals')])
-
+    @app.callback(Output('indicator-graphic', 'figure'),[Input('xaxis-column', 'value'),Input('graph-update', 'n_intervals')])
     def update_graph(xaxis_column_name,n_inter):
         prev = r.get()
         if(xaxis_column_name!=prev):
@@ -125,7 +124,7 @@ def dash_thread(q,r,t,out_pr):
         marker={'color': 'red',})
 
         return {'data': [data],'layout' : go.Layout(xaxis={'title':'TIME', 'showgrid':False,'range':[min(X),max(X)],'color':'black'},yaxis={'range':[min(Y),max(Y)],'title':'PPM', 'showgrid':False,'color':'black'},plot_bgcolor = 'rgba(0,0,0,0)',
-paper_bgcolor = 'rgba(0,0,0,0)',)},"Fetching Real-time data"
+paper_bgcolor = 'rgba(0,0,0,0)',)}
 
 
     @app.callback(Output('system_usage', 'children'),[Input(component_id='gauge-update',component_property='n_intervals')])
