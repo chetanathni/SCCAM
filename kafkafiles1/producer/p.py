@@ -36,7 +36,8 @@ while(1):
     date = day+'-'+month+'-'+year
     timey = hour+':'+minute+':'+second
     ppm = (random.random())*1000
-    data = {place: {area:{date: {timey:[ppm,CPU,total,used,percent]}}}}
+    #data = {place: {area:{date: {timey:[ppm,CPU,total,used,percent]}}}}
+    data = [ppm,CPU,total,used,percent]
     producer.send('sample', data)
     producer.flush()
     time.sleep(5)

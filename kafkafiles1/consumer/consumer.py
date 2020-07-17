@@ -17,10 +17,13 @@ def docker_data(u):
 
     topicName3 ='InputImage'
     producer3 = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
-    while(len(u)!=0):
-        docker_text=u.get()
-        producer3.send(topicName3 , docker_text.encode('utf-8'))
-        producer3.flush()
+    while(1):
+        if(u.empty()):
+            producer3.send(topicName3 , b'None')
+        else:
+            docker_text=u.get()
+            producer3.send(topicName3 , docker_text.encode('utf-8'))
+            producer3.flush()
 
 def user_ch(in_pr):
 
@@ -33,7 +36,8 @@ def user_ch(in_pr):
 
 def graph_info(q,t):
 
-    topicName = 'filtered'
+    #topicName = 'filtered'
+    topicName = 'sample'
     consumer = KafkaConsumer (topicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
 
     consumer.subscribe(topicName)
