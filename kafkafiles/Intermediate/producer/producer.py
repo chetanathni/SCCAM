@@ -1,17 +1,41 @@
 #imports and universal constants
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
+from pymongo import MongoClient
 import threading
 import queue
+import os
 import sys
 import json
 import time
 from json import loads
+
+#mongodb connection
+
+username = os.environ['MONGO_INITDB_ROOT_USERNAME']
+password = os.environ['MONGO_INITDB_ROOT_PASSWORD']
+#intermediate connection
+db_server_intermediate='mongodb:27017'
+conn_intermediate = MongoClient(db_server_intermediate, username=username, password=password)
+db_intermediate = conn_intermediate.database
+collection_intermediate = db_intermediate.all_data
+cursor1 = collection_intermediate.find()
+
+#backend connection
+db_server_backend='<backend IP >:27017'
+conn_backend = MongoClient(db_server_backend, username=username, password=password)
+db_backend = conn_backend.database
+collection_backend = db_backend.filtered_data
+cursor2 = collection_backend.find()
+
+#kafka connections
 bootstrap_servers = ['kafka:9092']
-sending_server = ['kafka:9092']
+sending_server = ['<backend IP>:9092']
 GetArea=''
 GetCity=''
+
 #act as consumer to get anantha's data from all VMs sending to a particular topic and set it to variable data
+
 
 def GetFile(r):
         InputTopicName = 'InputImage'
@@ -34,6 +58,7 @@ def GetData(q):
         DataTopicName = 'sample'
         consumerData = KafkaConsumer (DataTopicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         for message in consumerData:
+                collection_intermediate.insert(message.value)    #send all the data to intermediate DB
                 x=message.value
                 for city,data1 in x.items():
                         for area,data2 in data1.items():
@@ -67,6 +92,7 @@ def filters(q):
                 while(1):
                         producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
                         SentData=q.get()
+                        #collection_backend.insert(SentData)   #send filtered data to DB {need to send the dict}
                         producer.send(sendingTopic,SentData)
                         producer.flush()
                         print("Sent Data is ")
