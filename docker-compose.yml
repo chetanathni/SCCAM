@@ -49,5 +49,11 @@ services:
       - mongodb
       - kafka
 
+  sampleproducer:
+    container_name: sampleproducer
+    build: ./kafkafiles1/producer
+    environment: *commonEnviroment
+    depends_on: kafka
+
 volumes:
   mongodb_data_container:
