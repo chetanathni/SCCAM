@@ -55,5 +55,12 @@ services:
     environment: *commonEnviroment
     depends_on: kafka
 
+  dashcontainer:
+    container_name: dashcontainer
+    build: ./kafkafiles1/consumer
+    environment: *commonEnviroment
+    depends_on: kafka
+  
+
 volumes:
   mongodb_data_container:
