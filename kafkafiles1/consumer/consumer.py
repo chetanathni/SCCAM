@@ -13,14 +13,14 @@ import json
 
 bootstrap_servers = ['kafka:9092']
 
-def docker_data(docker_image):
+def docker_data(u):
 
     topicName3 ='InputImage'
-    producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
-    while(1):
-        docker_text=docker_image.get()
-        producer.send(topicName3 , docker_text.encode('utf-8'))
-        producer.flush()
+    producer3 = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
+    while(len(u)!=0):
+        docker_text=u.get()
+        producer3.send(topicName3 , docker_text.encode('utf-8'))
+        producer3.flush()
 
 def user_ch(in_pr):
 
@@ -51,7 +51,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-def dash_thread(q,r,t,out_pr,docker_image):
+def dash_thread(q,r,t,out_pr,u):
 
 
     X = deque(maxlen=20)
@@ -72,11 +72,7 @@ def dash_thread(q,r,t,out_pr,docker_image):
             ],
             style={'width': '40%', 'display': 'inline-block'}),
         ]),
-        dcc.Loading(
-            id="loading-1",
-            type="default",
-            children=html.Div(id="loading-output-1")
-        ),
+
 
         dcc.Graph(id='indicator-graphic',style={'width':700}),
         dcc.Interval(id='graph-update',interval=5100),
@@ -138,7 +134,7 @@ paper_bgcolor = 'rgba(0,0,0,0)',)}
 
     @app.callback(Output("output", "children"), [Input("input_text", "value")],)
     def update_filename(input_text):
-        docker_image.put(input_text)
+        u.put(input_text)
         return u'Input File:- {}'.format(input_text)
 
 if __name__ == "__main__":
@@ -147,20 +143,21 @@ if __name__ == "__main__":
     q = queue.Queue()
     r = queue.Queue()
     t = queue.Queue()
-    docker_image = queue.Queue()
+    u = queue.Queue()
     pr = queue.Queue()
     r.put('Bangalore North')
     pr.put('Bangalore North')
 
-    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,docker_image))
+    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,u))
     t2 = threading.Thread(target=graph_info ,args=(q,t))
     t3 = threading.Thread(target=user_ch , args=(pr,))
-    t4 = threading.Thread(target=docker_data , args=(docker_image,))
+    t4 = threading.Thread(target=docker_data , args=(u,))
 
     t1.start()
     t3.start()
     t2.start()
     t4.start()
+
     
 
     app.run_server(debug=True,host='0.0.0.0')
