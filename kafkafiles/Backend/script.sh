@@ -1,4 +1,4 @@
-sudo systemtl start docker
+sudo systemctl start docker
 sudo docker rm $(sudo docker ps -aq)
 sudo docker rmi $(sudo docker images)
 cd consumer
