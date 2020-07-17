@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  restart: always
   zookeeper:
     image: wurstmeister/zookeeper:latest
     container_name: zookeeper
@@ -8,6 +9,7 @@ services:
         - 2181
 
   kafka:
+    restart: always
     image: wurstmeister/kafka:latest
     depends_on:
     - zookeeper
@@ -25,7 +27,23 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
      # KAFKA_ADVERTISED_HOST_NAME: kafka
+  
+  mongodb:
+    restart: always
+    container_name: mongodb
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: test
+      
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
 
+volumes:
+  mongodb_data_container:
 
 networks:
    default:
