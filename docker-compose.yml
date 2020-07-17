@@ -47,6 +47,7 @@ services:
     environment: *commonEnviroment
     depends_on: 
       - mongodb
+      - kafka
 
 volumes:
   mongodb_data_container:
