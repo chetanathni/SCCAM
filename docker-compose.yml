@@ -23,7 +23,8 @@ services:
     restart: always
     image: wurstmeister/kafka:latest
     depends_on:
-    - zookeeper
+       zookeeper:
+          condition: service_started
     container_name: kafka
     expose:
     - 9092
@@ -47,27 +48,28 @@ services:
     build: ./kafkafiles1/input
     environment: *commonEnviroment
     depends_on: 
-      - mongodb
-      - kafka
-      - zookeeper
+       mongodb:
+          condition: service_healthy
+       kafka: 
+          condition: service_started
+
 
   sampleproducer:
     container_name: sampleproducer
     build: ./kafkafiles1/producer
     environment: *commonEnviroment
     depends_on: 
-       - kafka
-       - zookeeper
+       kafka: 
+          condition: service_started
+
 
   dashcontainer:
     container_name: dashcontainer
     build: ./kafkafiles1/consumer
     environment: *commonEnviroment
     depends_on: 
-       - kafka
-       - zookeeper
-       - sampleproducer
-  
+       kafka: 
+          condition: service_started
 
 volumes:
   mongodb_data_container:
