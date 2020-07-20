@@ -30,6 +30,7 @@ services:
     ports:
     - 9092:9092
     environment: *commonEnviroment
+    
   mongodb:
     restart: always
     container_name: mongodb
@@ -65,6 +66,7 @@ services:
     depends_on: 
        - kafka
        - zookeeper
+       - sampleproducer
   
 
 volumes:
