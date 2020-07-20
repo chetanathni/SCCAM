@@ -48,6 +48,7 @@ services:
     depends_on: 
       - mongodb
       - kafka
+      - zookeeper
 
   sampleproducer:
     container_name: sampleproducer
@@ -55,6 +56,7 @@ services:
     environment: *commonEnviroment
     depends_on: 
        - kafka
+       - zookeeper
 
   dashcontainer:
     container_name: dashcontainer
@@ -62,6 +64,7 @@ services:
     environment: *commonEnviroment
     depends_on: 
        - kafka
+       - zookeeper
   
 
 volumes:
