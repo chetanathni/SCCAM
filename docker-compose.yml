@@ -51,23 +51,5 @@ services:
        - kafka
 
 
-  sampleproducer:
-    container_name: sampleproducer
-    build: ./kafkafiles1/producer
-    restart: on-failure
-    environment: *commonEnviroment
-    depends_on: 
-       - kafka
-
-
-  dashcontainer:
-  
-    container_name: dashcontainer
-    restart: on-failure
-    build: ./kafkafiles1/consumer
-    environment: *commonEnviroment
-    depends_on: 
-       - kafka
-
 volumes:
   mongodb_data_container:
