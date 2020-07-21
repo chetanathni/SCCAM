@@ -19,10 +19,11 @@ def docker_data(u):
     producer3 = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
     while(1):
         if(u.empty()):
-            producer3.send(topicName3 , b'None')
+            producer3.send(topicName3 , b'.')
         else:
             docker_text=u.get()
-            producer3.send(topicName3 , docker_text.encode('utf-8'))
+            producer3.send(topicName3 , b'yes')
+            #producer3.send(topicName3 , docker_text.encode('utf-8'))
             producer3.flush()
 
 def user_ch(in_pr):
