@@ -46,8 +46,6 @@ services:
     container_name: testcontainer
     build: ./kafkafiles1/input
     environment: *commonEnviroment
-    WAIT_HOSTS: kafka,mongodb
-
 
 volumes:
   mongodb_data_container:
