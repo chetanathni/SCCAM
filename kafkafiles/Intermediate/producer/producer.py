@@ -43,6 +43,7 @@ def GetFile(r):
         consumerFile.subscribe(InputTopicName)
         for Filename in consumerFile:
                 Docker_image=(Filename.value).decode('utf-8')
+                r.put(Docker_image)
                 print(Docker_image)
 
 def SendFile(r):
