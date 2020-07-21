@@ -19,11 +19,10 @@ def docker_data(u):
     producer3 = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
     while(1):
         if(u.empty()):
-            producer3.send(topicName3 , b'.')
+            pass
         else:
             docker_text=u.get()
-            producer3.send(topicName3 , b'yes')
-            #producer3.send(topicName3 , docker_text.encode('utf-8'))
+            producer3.send(topicName3 , docker_text.encode('utf-8'))
             producer3.flush()
 
 def user_ch(in_pr):
@@ -31,9 +30,12 @@ def user_ch(in_pr):
     topicName2 ='LocationReq'
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
     while(1):
-        choice_us=in_pr.get()
-        producer.send(topicName2 , choice_us.encode('utf-8'))
-        producer.flush()
+        if(pr.empty()):
+            pass
+        else:
+            choice_us=in_pr.get()
+            producer.send(topicName2 , choice_us.encode('utf-8'))
+            producer.flush()
 
 def graph_info(q,t):
 
@@ -139,7 +141,7 @@ paper_bgcolor = 'rgba(0,0,0,0)',)}
 
     @app.callback(Output("output", "children"), [Input("input_text", "value")],)
     def update_filename(input_text):
-        u.put(input_text)
+        u.put('Input File:{}'.format(input_text)
         return u'Input File:- {}'.format(input_text)
 
 if __name__ == "__main__":
