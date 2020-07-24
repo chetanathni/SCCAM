@@ -15,8 +15,8 @@ from json import loads
 username = os.environ['MONGO_INITDB_ROOT_USERNAME']
 password = os.environ['MONGO_INITDB_ROOT_PASSWORD']
 #intermediate connection
-db_server_intermediate='mongodb:27017'
-conn_intermediate = MongoClient(db_server_intermediate, username=username, password=password)
+db_server_intermediate='mongodb:27018'
+conn_intermediate = MongoClient(db_server_intermediate, username=username, password=password,port=27018)
 db_intermediate = conn_intermediate.database
 collection_intermediate = db_intermediate.all_data
 cursor1 = collection_intermediate.find()
