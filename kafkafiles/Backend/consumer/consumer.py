@@ -12,6 +12,14 @@ import threading ,queue
 import json
 
 bootstrap_servers = ['34.71.243.135:9092']
+def send_agg(agg_send):
+
+    topicName4 ='functionName'
+    producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
+    while(1):
+        func_text=agg_send.get()
+        producer.send(topicName3 , func_text.encode('utf-8'))
+        producer.flush()
 
 def docker_data(docker_image):
 
@@ -51,7 +59,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-def dash_thread(q,r,t,out_pr):
+def dash_thread(q,r,t,pr,docker_image,agg):
 
 
     X = deque(maxlen=20)
@@ -87,6 +95,18 @@ def dash_thread(q,r,t,out_pr):
 
         html.Div(id="system_usage", children=[
             ] ),
+        
+        dcc.Dropdown(
+        id='demo-dropdown',
+        options=[
+            {'label': 'Minimum', 'value': 'min'},
+            {'label': 'Maximum', 'value': 'max'},
+            {'label': 'Average', 'value': 'avg'}
+        ],
+        value='min'
+    ),
+    html.Div(id='dd-output-container')
+])
 
     ])
 
@@ -139,8 +159,16 @@ paper_bgcolor = 'rgba(0,0,0,0)',)},"Fetching Real-time data"
 
     @app.callback(Output("output", "children"), [Input("input_text", "value")],)
     def update_filename(input_text):
-        docker_image.put(input_text)
+        docker_image.put('{}'.format(input_text))
         return u'Input File:- {}'.format(input_text)
+    
+    @app.callback(
+    dash.dependencies.Output('dd-output-container', 'children'),
+    [dash.dependencies.Input('demo-dropdown', 'value')])
+    def update_output(value):
+        agg_send.put('{}'.format(value))
+        computed_val=agg_rec.get()
+    return '{} : {}'.format(value,computed_val)
 
 if __name__ == "__main__":
 
@@ -150,18 +178,23 @@ if __name__ == "__main__":
     t = queue.Queue()
     docker_image = queue.Queue()
     pr = queue.Queue()
+    agg = queue.Queue()
+    agg_rec = queue.Queue()
+    agg_send.put('min')
     r.put('Bangalore North')
     pr.put('Bangalore North')
 
-    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,docker_image))
+    t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,docker_image,agg_send,agg_rec))
     t2 = threading.Thread(target=graph_info ,args=(q,t))
     t3 = threading.Thread(target=user_ch , args=(pr,))
     t4 = threading.Thread(target=docker_data , args=(docker_image,))
+    t5 = threading.Thread(target=send_agg , args=(agg_send,))
 
     t1.start()
     t3.start()
     t2.start()
     t4.start()
+    t5.start()
     
 
     app.run_server(debug=True,host='0.0.0.0')
