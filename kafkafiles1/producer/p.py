@@ -7,8 +7,8 @@ from kafka import KafkaProducer
 import psutil
 bootstrap_servers = ['kafka:9092']
 producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0),value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-place = 'Mumbai'
-areas = ['North','South']
+place = 'bangalore-north'
+
 
 def get_size(bytes, suffix="B"):
 
@@ -37,7 +37,8 @@ while(1):
     timey = hour+':'+minute+':'+second
     ppm = (random.random())*1000
     #data = {place: {area:{date: {timey:[ppm,CPU,total,used,percent]}}}}
-    data = [ppm,CPU,total,used,percent]
+    #data = [ppm,CPU,total,used,percent]
+    data = {'area':place,'date':date,'time':timey,'ppm':ppm,'CPU':CPU,'total_RAM':total,'used_RAM':used,'percent_used':percent}
     producer.send('sample', data)
     producer.flush()
-    time.sleep(5)
+    time.sleep(2)
