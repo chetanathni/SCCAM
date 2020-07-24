@@ -35,7 +35,14 @@ GetArea=''
 GetCity=''
 
 #act as consumer to get anantha's data from all VMs sending to a particular topic and set it to variable data
-
+def GetFunc(fname):
+        InputTopicName = 'functionName'
+        consumerFunc= KafkaConsumer (InputTopicName, group_id = 'group2', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
+        consumerFunc.subscribe(InputTopicName)
+        for Funcname in consumerFunc:
+                Function_name=(Funcname.value).decode('utf-8')
+                fname.put(Docker_image)
+                print(Docker_image)
 
 def GetFile(r):
         InputTopicName = 'InputImage'
@@ -103,14 +110,17 @@ if __name__ == "__main__":
     # creating thread
         q = queue.Queue()
         r = queue.Queue()
+        fname = queue.Queue()
         t1 = threading.Thread(target=GetData ,args=(q,))
         t2 = threading.Thread(target=filters ,args=(q,))
         t3 = threading.Thread(target=GetLoc)
         t4 = threading.Thread(target=GetFile ,args=(r,))
+        t5 = threading.Thread(target=GetFunc ,args=(fname,))
 
         t1.start()
         t2.start()
         t3.start()
         t4.start()
+        t5.start()
 
 
