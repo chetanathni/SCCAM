@@ -18,7 +18,7 @@ def send_agg(agg_send):
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
     while(1):
         func_text=agg_send.get()
-        producer.send(topicName3 , func_text.encode('utf-8'))
+        producer.send(topicName4 , func_text.encode('utf-8'))
         producer.flush()
 
 def docker_data(docker_image):
@@ -59,7 +59,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-def dash_thread(q,r,t,pr,docker_image,agg):
+def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
 
 
     X = deque(maxlen=20)
@@ -80,11 +80,6 @@ def dash_thread(q,r,t,pr,docker_image,agg):
             ],
             style={'width': '40%', 'display': 'inline-block'}),
         ]),
-        dcc.Loading(
-            id="loading-1",
-            type="default",
-            children=html.Div(id="loading-output-1")
-        ),
 
         dcc.Graph(id='indicator-graphic',style={'width':700}),
         dcc.Interval(id='graph-update',interval=5100),
@@ -103,16 +98,17 @@ def dash_thread(q,r,t,pr,docker_image,agg):
             {'label': 'Maximum', 'value': 'max'},
             {'label': 'Average', 'value': 'avg'}
         ],
-        value='min'
+        value='min',
+        
     ),
     html.Div(id='dd-output-container')
 ])
 
-    ])
+    
 
     def empty_graph(X,Y,xaxis_column_name):
 
-        out_pr.put(xaxis_column_name)
+        pr.put(xaxis_column_name)
 
         Y.clear()
         Y.append(0)
@@ -121,7 +117,7 @@ def dash_thread(q,r,t,pr,docker_image,agg):
 
         
 
-    @app.callback(Output('indicator-graphic', 'figure'),Output("loading-output-1", "children"),[Input('xaxis-column', 'value'),Input('graph-update', 'n_intervals')])
+    @app.callback(Output('indicator-graphic', 'figure'),[Input('xaxis-column', 'value'),Input('graph-update', 'n_intervals')])
 
     def update_graph(xaxis_column_name,n_inter):
         prev = r.get()
@@ -145,7 +141,7 @@ def dash_thread(q,r,t,pr,docker_image,agg):
         marker={'color': 'red',})
 
         return {'data': [data],'layout' : go.Layout(xaxis={'title':'TIME', 'showgrid':False,'range':[min(X),max(X)],'color':'black'},yaxis={'range':[min(Y),max(Y)],'title':'PPM', 'showgrid':False,'color':'black'},plot_bgcolor = 'rgba(0,0,0,0)',
-paper_bgcolor = 'rgba(0,0,0,0)',)},"Fetching Real-time data"
+paper_bgcolor = 'rgba(0,0,0,0)',)}
 
 
     @app.callback(Output('system_usage', 'children'),[Input(component_id='gauge-update',component_property='n_intervals')])
@@ -165,10 +161,11 @@ paper_bgcolor = 'rgba(0,0,0,0)',)},"Fetching Real-time data"
     @app.callback(
     dash.dependencies.Output('dd-output-container', 'children'),
     [dash.dependencies.Input('demo-dropdown', 'value')])
-    def update_output(value):
+    def update_output2(value):
         agg_send.put('{}'.format(value))
+        time.sleep(2)
         computed_val=agg_rec.get()
-    return '{} : {}'.format(value,computed_val)
+        return '{} : {}'.format(value,computed_val)
 
 if __name__ == "__main__":
 
@@ -178,7 +175,7 @@ if __name__ == "__main__":
     t = queue.Queue()
     docker_image = queue.Queue()
     pr = queue.Queue()
-    agg = queue.Queue()
+    agg_send = queue.Queue()
     agg_rec = queue.Queue()
     agg_send.put('min')
     r.put('Bangalore North')
