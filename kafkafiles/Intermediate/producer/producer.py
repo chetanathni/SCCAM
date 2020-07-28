@@ -62,12 +62,7 @@ def GetFunc(fname):
                 pipeline = [{"$group":{"_id": "$area","val": { "${}".format(Function_name): "$ppm" }}}]
                 cursor = collection.aggregate(pipeline)
                 #sval.put(cursor[0]['value'])
-<<<<<<< HEAD
-                
-=======
                 print(list(cursor))
->>>>>>> 46dc36bcd2b2be78656570f7c40956cd293710ed
-                
 
 ​
 def GetFile(r):
@@ -152,8 +147,4 @@ if __name__ == "__main__":
         t2.start()
         #t3.start()
         #t4.start()
-<<<<<<< HEAD
         t5.start()
-=======
-        t5.start()
->>>>>>> 46dc36bcd2b2be78656570f7c40956cd293710ed
