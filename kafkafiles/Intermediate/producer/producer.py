@@ -63,7 +63,7 @@ def GetFunc(fname):
                 cursor = collection.aggregate(pipeline)
                 #sval.put(cursor[0]['value'])
 <<<<<<< HEAD
-                print(cursor[0]['value'])
+                
 =======
                 print(list(cursor))
 >>>>>>> 46dc36bcd2b2be78656570f7c40956cd293710ed

@@ -52,8 +52,7 @@ def graph_info(q,t):
         q.put(y[0])
         t.put(y[1:5])
 
-    print(q.queue)
-    print(t.queue)
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -163,7 +162,6 @@ paper_bgcolor = 'rgba(0,0,0,0)',)}
     [dash.dependencies.Input('demo-dropdown', 'value')])
     def update_output2(value):
         agg_send.put('{}'.format(value))
-        time.sleep(2)
         computed_val=agg_rec.get()
         return '{} : {}'.format(value,computed_val)
 
@@ -186,16 +184,13 @@ if __name__ == "__main__":
     t3 = threading.Thread(target=user_ch , args=(pr,))
     t4 = threading.Thread(target=docker_data , args=(docker_image,))
     t5 = threading.Thread(target=send_agg , args=(agg_send,))
-
+    t6 = threading.Thread(target=rec_agg , args=(agg_rec,))
     t1.start()
     t3.start()
     t2.start()
     t4.start()
     t5.start()
+    t6.start()
     
 
     app.run_server(debug=True,host='0.0.0.0')
-    # starting thread 2 
-
-    # wait unti
-                
