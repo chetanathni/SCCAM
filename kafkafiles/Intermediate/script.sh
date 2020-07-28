@@ -8,7 +8,7 @@ sudo sed -i '$ d' ~/.profile
 sudo echo "IP_ADD=$ip_add" >> ~/.profile
 .  ~/.profile
 
-sudo echo "KAFKA_ADVERTISED_HOST_NAME: $ip_add" >> .env
+sudo echo "KAFKA_ADVERTISED_HOST_NAME: $ip_add" >> /kafka-broker/conf.env
 
 sudo systemctl start docker
 sudo docker rm $(sudo docker ps -aq)

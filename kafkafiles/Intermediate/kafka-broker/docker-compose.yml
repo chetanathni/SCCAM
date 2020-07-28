@@ -6,7 +6,7 @@ services:
     image: wurstmeister/zookeeper:latest
     restart: always
     env_file:
-    - ../conf.env
+    - conf.env
     
     container_name: zookeeper
     expose:
@@ -24,7 +24,7 @@ services:
     ports:
     - 9092:9092
     env_file:
-    - ../conf.env
+    - conf.env
     
   
   mongodb:
@@ -32,7 +32,7 @@ services:
     container_name: mongodb
     image: mongo:latest
     env_file:
-    - ../conf.env
+    - conf.env
 
     ports:
       - 27017:27017
