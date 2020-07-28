@@ -33,9 +33,8 @@ services:
     image: mongo:latest
     env_file:
     - conf.env
-
     ports:
-      - 27017:27017
+      - 27018:27017
     volumes:
       - mongodb_data_container:/data/db
 

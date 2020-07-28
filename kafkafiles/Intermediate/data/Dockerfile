@@ -4,4 +4,4 @@ RUN pip install kafka
 RUN pip install psutil
 COPY . .
 #CMD ["python3","-u","/app/producer1.py"]
-CMD ["python3","-u","p.py"]
+CMD ["python3","-u","data.py"]

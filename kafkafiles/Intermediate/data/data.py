@@ -32,7 +32,6 @@ while(1):
     total = get_size(A.total)
     used = get_size(A.used)
     percent = A.percent
-    area = random.choice(areas)
     date = day+'-'+month+'-'+year
     timey = hour+':'+minute+':'+second
     ppm = (random.random())*1000
