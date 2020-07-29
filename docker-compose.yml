@@ -1,0 +1,49 @@
+version: '3.8'
+
+x-enviroment: &commonEnv
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: test
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PORT: 9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_BROKER_ID: 0
+      KAFKA_ADVERTISED_LISTENERS:  PLAINTEXT://:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+services:
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    expose:
+        - 2181
+
+  kafka:
+    restart: always
+    image: wurstmeister/kafka:latest
+    depends_on:
+       - zookeeper
+    container_name: kafka
+    expose:
+    - 9092
+    ports:
+    - 9092:9092
+    environment: *commonEnv
+    
+  mongodb:
+    restart: always
+    container_name: mongodb
+    image: mongo:latest
+    environment: *commonEnv
+
+    ports:
+      - 27018:27018
+    volumes:
+      - mongodb_data_container:/data/db
+
+
+
+
+volumes:
+  mongodb_data_container:
