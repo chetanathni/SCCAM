@@ -40,5 +40,6 @@ while(1):
     #data = [ppm,CPU,total,used,percent]
     data = {'area':place,'date':date,'time':timey,'ppm':ppm,'CPU':CPU,'total_RAM':total,'used_RAM':used,'percent_used':percent}
     producer.send('sample', data)
+    print(data)
     producer.flush()
     time.sleep(2)
