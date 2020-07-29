@@ -2,7 +2,7 @@ sudo systemctl start docker
 sudo docker-compose down
 echo "Starting up broker"
 sudo docker-compose up -d
-sleep 60
+sleep 60 
 cd ./kafkafiles1/producer
 echo "Sending Dummy data"
 sudo docker build -t pro .
