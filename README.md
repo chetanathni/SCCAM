@@ -1,1 +1,1 @@
-Clone the repo and run `./intermediate.sh'
+Clone the repo and run `./intermediate.sh`
