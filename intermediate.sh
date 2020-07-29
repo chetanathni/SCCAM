@@ -3,13 +3,13 @@ sudo docker-compose down
 echo "Starting up broker"
 sudo docker-compose up -d
 sleep 60 
-cd ./kafkafiles1/producer
-echo "Sending Dummy data"
-sudo docker build -t pro .
-sleep 20
-sudo docker run -d --net package_default pro
-cd ..
-cd ./filter
+#cd ./kafkafiles1/producer
+#echo "Sending Dummy data"
+#sudo docker build -t pro .
+#sleep 20
+#sudo docker run -d --net package_default pro
+#cd ..
+cd ./kafkafiles1/filter
 echo "Buliding Intermediate Container"
 sudo docker build -t filter .
 sleep 30
