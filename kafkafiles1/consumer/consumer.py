@@ -5,6 +5,7 @@ import dash_html_components as html
 from kafka import KafkaConsumer,KafkaProducer
 import threading ,queue
 import plotly
+from plotly import tools
 import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from collections import deque
@@ -72,9 +73,17 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
     X.append(1)
     Y = deque(maxlen=20)
     Y.append(1)
+    U = deque(maxlen=20)
+    U.append(1)
+    V = deque(maxlen=20)
+    V.append(1)
+    A = deque(maxlen=20)
+    A.append(1)
+    B = deque(maxlen=20)
+    B.append(1)    
 
     
-
+    sub_fig = tools.make_subplots(rows=1, cols=2, shared_xaxes=False,vertical_spacing=0.1,horizontal_spacing=0.1)
     navbar = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("Home", href="#")),
@@ -97,6 +106,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         fluid =True,
         sticky="top",
     )
+
     hello = dbc.Container(
         dbc.Alert("We're still under construction. Our services will begin soon!", color="success"),
         className="p-5",
