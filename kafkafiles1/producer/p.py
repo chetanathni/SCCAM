@@ -32,13 +32,12 @@ while(1):
     total = get_size(A.total)
     used = get_size(A.used)
     percent = A.percent
-    area = random.choice(areas)
     date = day+'-'+month+'-'+year
     timey = hour+':'+minute+':'+second
     ppm = (random.random())*1000
     #data = {place: {area:{date: {timey:[ppm,CPU,total,used,percent]}}}}
-    #data = [ppm,CPU,total,used,percent]
-    data = {'area':place,'date':date,'time':timey,'ppm':ppm,'CPU':CPU,'total_RAM':total,'used_RAM':used,'percent_used':percent}
+    data = [ppm,CPU,total,used,percent]
+    #data = {'area':place,'date':date,'time':timey,'ppm':ppm,'CPU':CPU,'total_RAM':total,'used_RAM':used,'percent_used':percent}
     producer.send('sample', data)
     producer.flush()
     time.sleep(2)
