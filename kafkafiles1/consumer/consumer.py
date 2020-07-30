@@ -13,7 +13,7 @@ import time
 import json
 import dash_daq as daq
 import queue,threading
-bootstrap_servers = ['34.71.243.135:9092']
+bootstrap_servers = ['kafka:9092']
 
 def rec_agg(agg_rec):
         topicName5 = 'aggVal'
@@ -52,7 +52,7 @@ def user_ch(in_pr):
 
 def graph_info(q,t):
 
-    topicName = 'filtered'
+    topicName = 'sample'
     consumer = KafkaConsumer (topicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
 
     consumer.subscribe(topicName)
@@ -128,16 +128,16 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
                         id='my_ticker_symbol',
                         options=[{'label': i, 'value': i} for i in places], #places,
                         value= 'Bangalore',#=['Bangalore'],
-                        style = {'height': '2px', 'width':'900px'},
+                        style = {'height': '2px', 'width':'300px'},
                     ),
                     html.P(),
-                    dcc.Graph(id='live-graph', animate=True,style={'width':900,'align':'center',
+                    dcc.Graph(id='live-graph', animate=True,style={'width':700,'align':'center',
                     'plot_bgcolor': '#114111',
                     'paper_bgcolor': '#111671'
                     },),
-                    dcc.Interval(id='graph-update',interval=5000),
+                    dcc.Interval(id='graph-update',interval=1*5000),
                     ],
-                    style={"width" : "70rem"},
+                    style={"width" : "50rem"},
     ),
     dbc.Card(
     [
@@ -178,7 +178,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
                 {'label': 'Maximum', 'value': 'max'},
                 {'label': 'Average', 'value': 'avg'}
             ],
-            value='min',style={'width':'25rem'}
+            value='min',style={'width':'20rem'}
         ),
         html.Div(id='aggregate-output-container'),
         ],
@@ -187,7 +187,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
     ),
     #html.P("Average:- "),
     ],
-    style = {'height':'120px','width':'30rem'},
+    style = {'height':'120px','width':'25rem'},
     ),],),
     ],),],)
     jumbo_admin = dbc.Jumbotron(
@@ -244,11 +244,11 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         X.clear()
         X.append(0)
 
-    @app.callback(Output('live-graph', 'figure'),[Input('graph-update', 'n_intervals')],[State('my_ticker_symbol','value')])
-    def update_graph_scatter(input_data,key):
-        prev = r.get()
-        if(input_data!=prev):
-            empty_graph(X,Y,input_data)
+    @app.callback(Output('live-graph', 'figure'),[Input('graph-update', 'n_intervals')])
+    def update_graph_scatter(input_data):
+        #prev = r.get()
+        #if(input_data!=prev):
+            #empty_graph(X,Y,input_data)
             #q.queue.clear()
             #t.queue.clear()
 
@@ -258,20 +258,21 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         X.append(X[-1]+1)
         Y.append(ppmval)
 
-
         data = plotly.graph_objs.Scatter(
-                x=list(X),
-                y=list(Y),
-                name='Scatter',
-                mode= 'lines+markers',
-                fill='tonexty',
-                #marker={'color': 'red' ,}
-                )
+        x=list(X),
+        y=list(Y),
+        name='Scatter',
+        mode= 'lines+markers',
+        fill = 'tonexty',
+        #marker={'color': 'red',}
+        )
+
         return {'data': [data],'layout' : go.Layout(xaxis={'title':'Time (in seconds)', 'showgrid':False,'range':[min(X),max(X)],'color':'white',},
                                                     yaxis={'range':[0,max(Y)+100],'title':'PPM', 'showgrid':False,'color':'white',},
                                                     plot_bgcolor = 'rgba(1,1,0,0)',
                                                     paper_bgcolor = 'rgba(1,1,0,0)',
-                                                )}
+                                                   )}
+
 if __name__ == "__main__":
 
     # creating thread 
