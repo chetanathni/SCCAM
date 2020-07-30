@@ -8,12 +8,11 @@ import plotly
 import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from collections import deque
-import numpy as np
 import datetime
 import time
 import json
 import dash_daq as daq
-import queue
+import queue,threading
 bootstrap_servers = ['34.71.243.135:9092']
 
 def rec_agg(agg_rec):
