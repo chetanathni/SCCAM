@@ -198,67 +198,22 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
             children=[
             dbc.Card(
             [
-            dcc.Graph(id='cpu-graph', animate=True,),
-            dcc.Interval(id='cpu-update',interval=1000),
+            #dcc.Graph(id='cpu-graph', animate=True,),
+            #dcc.Interval(id='cpu-update',interval=1000),
             ],
             style={"width" : "40rem"},),],),
         html.Div(id="ram",
         children=[
         dbc.Card(
         [
-        dcc.Graph(id='ram-graph', animate=True,),
-        dcc.Interval(id='ram-update',interval=1000),
+        #dcc.Graph(id='ram-graph', animate=True,),
+        #dcc.Interval(id='ram-update',interval=1000),
         ],
         style={"width" : "40rem"},
     ),],),],)
 
 
-    @app.callback(Output('cpu-graph', 'children'),[Input(component_id='cpu-update',component_property='n_intervals')])
-    def update_output(w):
-            l_items = t.get()
-            cpu_usage = l_items[0]
-            total_ram = l_items[1]
-            used_ram = l_items[2]
-            disk_usage = l_items[3]
-            X.append(X[-1]+1)
-            Y.append(cpu_usage)
-            data = plotly.graph_objs.Scatter(
-                    x=list(X),
-                    y=list(Y),
-                    name='Scatter',
-                    mode= 'lines+markers',
-                    fill='tonexty',
-                    #marker={'color': 'red' ,}
-                    )
-            return {'data': [data],'layout' : go.Layout(xaxis={'title':'Time (in seconds)', 'showgrid':False,'range':[min(X),max(X)],'color':'white',},
-                                                            yaxis={'range':[0,100],'title':'CPU', 'showgrid':False,'color':'white',},
-                                                            plot_bgcolor = 'rgba(1,1,0,0)',
-                                                            paper_bgcolor = 'rgba(1,1,0,0)',
-                                                        )}
-
-
-    @app.callback(Output('ram-graph', 'figure'),[Input(component_id='ram-update',component_property='n_intervals')])
-    def update_output3(w):
-            l_items = t.get()
-            cpu_usage = l_items[0]
-            total_ram = l_items[1]
-            used_ram = l_items[2]
-            disk_usage = l_items[3]
-            X.append(X[-1]+1)
-            Y.append(used_ram)
-            data = plotly.graph_objs.Scatter(
-                    x=list(X),
-                    y=list(Y),
-                    name='Scatter',
-                    mode= 'lines+markers',
-                    fill='tonexty',
-                    #marker={'color': 'red' ,}
-                    )
-            return {'data': [data],'layout' : go.Layout(xaxis={'title':'Time (in seconds)', 'showgrid':False,'range':[min(X),max(X)],'color':'white',},
-                                                            yaxis={'range':[0,max(Y)],'title':'RAM Usage', 'showgrid':False,'color':'white',},
-                                                            plot_bgcolor = 'rgba(1,1,0,0)',
-                                                            paper_bgcolor = 'rgba(1,1,0,0)',
-                                                        )}
+    
     @app.callback(
         dash.dependencies.Output('aggregate-output-container', 'children'),
         [dash.dependencies.Input('aggregate-dropdown', 'value')])
