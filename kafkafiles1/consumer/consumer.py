@@ -65,7 +65,7 @@ def graph_info(q,t):
 
 BS = "https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/solar/bootstrap.min.css"
 places=['Bangalore','Delhi','Mumbai','Hyderabad']
-app = dash.Dash(external_stylesheets=[BS])
+app = dash.Dash(__name__,external_stylesheets=[BS])
 def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
 
     X = deque(maxlen=20)
@@ -212,7 +212,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
     ),],),],)
 
 
-    
+    app.layout = html.Div([navbar,hello,jumbotron,jumbo,jumbo_admin,],)
     @app.callback(
         dash.dependencies.Output('aggregate-output-container', 'children'),
         [dash.dependencies.Input('aggregate-dropdown', 'value')])
@@ -229,7 +229,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         if n1 or n2:
             return not is_open
         return is_open
-    app.layout = html.Div([navbar,hello,jumbotron,jumbo,jumbo_admin,],)
+    
     @app.callback(Output("output", "children"),[Input("input_text", "value")],)
     def update_output(input_text):
         docker_image.put('{}'.format(input_text))
