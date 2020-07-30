@@ -135,7 +135,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
                     'plot_bgcolor': '#114111',
                     'paper_bgcolor': '#111671'
                     },),
-                    dcc.Interval(id='graph-update',interval=1000),
+                    dcc.Interval(id='graph-update',interval=5000),
                     ],
                     style={"width" : "70rem"},
     ),
