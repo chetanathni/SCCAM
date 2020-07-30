@@ -249,8 +249,8 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         prev = r.get()
         if(input_data!=prev):
             empty_graph(X,Y,input_data)
-            q.queue.clear()
-            t.queue.clear()
+            #q.queue.clear()
+            #t.queue.clear()
 
         r.put(input_data)
 
