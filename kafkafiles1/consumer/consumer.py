@@ -80,10 +80,11 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
     A = deque(maxlen=20)
     A.append(1)
     B = deque(maxlen=20)
-    B.append(1)    
+    B.append(1)     
 
     
-    sub_fig = tools.make_subplots(rows=1, cols=2, shared_xaxes=False,vertical_spacing=0.1,horizontal_spacing=0.1)
+    fig = tools.make_subplots(rows=1, cols=2, shared_yaxes=True,vertical_spacing=0.1,horizontal_spacing=0.1)
+
     navbar = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("Home", href="#")),
@@ -203,26 +204,41 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
     jumbo_admin = dbc.Jumbotron(
     [
     dbc.Badge("ADMIN", pill=True, color="warning", className="mr-1"),
-            html.Div(id="cpu",
-            children=[
-            dbc.Card(
-            [
-            #dcc.Graph(id='cpu-graph', animate=True,),
-            #dcc.Interval(id='cpu-update',interval=1000),
-            ],
-            style={"width" : "40rem"},),],),
-        html.Div(id="ram",
-        children=[
-        dbc.Card(
-        [
-        #dcc.Graph(id='ram-graph', animate=True,),
-        #dcc.Interval(id='ram-update',interval=1000),
-        ],
-        style={"width" : "40rem"},
-    ),],),],)
+    html.Div(id='system',
+    children= [
+        dcc.Graph(
+        id='graph',
+        figure=fig
+        ),
+        dcc.Interval(
+            id='graph-update',
+            interval=1*5000
+        ),
+    ]
+)
 
-
+        ,],)
     app.layout = html.Div([navbar,hello,jumbotron,jumbo,jumbo_admin,],)
+
+    @app.callback(Output('graph', 'figure'),
+               [Input('graph-update', 'n_intervals')])
+    def update_graph_scatter(n_intervals):
+        system_usage = t.get()
+        cpu=system_usage[0]
+        total_ram = system_usage[1]
+        used_ram = system_usage[2]
+        disk_pct = system_usage[3]
+        U.append(X[-1]+1)
+        V.append(cpu)
+        A.append(A[-1]+1)
+        B.append(disk_pct)
+        fig.append_trace(go.Scatter(x=list(A),y=list(B),name='CPU',mode= 'lines',marker_color='rgb(179, 179, 255)'),1,1)
+        fig.append_trace(go.Scatter(x=list(U),y=list(V),name='Disk',mode= 'lines',marker_color='rgb(217, 179, 255)'),1,2)
+        fig.update_layout(height=600, width=1500, title_text="System Usage",showlegend=False)
+        return fig
+
+    
+
     @app.callback(
         dash.dependencies.Output('aggregate-output-container', 'children'),
         [dash.dependencies.Input('aggregate-dropdown', 'value')])
@@ -255,7 +271,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_send,agg_rec):
         X.append(0)
 
     @app.callback(Output('live-graph', 'figure'),[Input('graph-update', 'n_intervals')])
-    def update_graph_scatter(input_data):
+    def update_graph_scatter2(input_data):
         #prev = r.get()
         #if(input_data!=prev):
             #empty_graph(X,Y,input_data)
