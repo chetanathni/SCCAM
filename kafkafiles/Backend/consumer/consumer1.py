@@ -36,7 +36,7 @@ def send_agg(agg_send):
         producer.flush()
 def docker_data(docker_image):
 
-    topicName3 ='InputImage'
+    topicName3 ='OptionName'
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,api_version=(0,10,0))
     while(1):
         docker_text=docker_image.get()
