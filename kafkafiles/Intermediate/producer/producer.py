@@ -33,7 +33,7 @@ cursor2 = collection_backend.find()
 ​'''
 #kafka connections
 bootstrap_servers = ['kafka:9092']
-sending_server = ['35.239.220.105:9092']
+sending_server = ['kafka:9092']
 GetArea=''
 GetCity=''
 '''
@@ -47,7 +47,6 @@ GetCity=''
      }
 ]
 cursor = collection.aggregate(pipeline)
-
 for i in cursor:
         print(i)
 '''
@@ -64,7 +63,24 @@ def GetFunc(fname):
                 #sval.put(cursor[0]['value'])
                 print(list(cursor))
 
+          
+def GetOption(q):
+        OptionTopicName = 'OptionName'
+        OptionConsumer= KafkaConsumer (OptionTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
+        OptionConsumer.subscribe(OptionTopicName)
+        for OptionName in OptionConsumer:
+                Option=(OptionName.value).decode('utf-8')
+                print(Option)
+                if (Option=='Default'):
+                       t2 = threading.Thread(target=filters ,args=(q,))
+                       t2.start()
+                else:
+                       os.system("docker pull "+option)
+                       os.system("docker run "+option)
+
 ​
+
+
 def GetFile(r):
         InputTopicName = 'InputImage'
         consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
@@ -138,13 +154,12 @@ if __name__ == "__main__":
         r = queue.Queue()
         fname = queue.Queue()
         t1 = threading.Thread(target=GetData ,args=(q,))
-        t2 = threading.Thread(target=filters ,args=(q,))
+        #t2 = threading.Thread(target=filters ,args=(q,))
         t3 = threading.Thread(target=GetLoc)
-        t4 = threading.Thread(target=GetFile ,args=(r,))
+        t4 = threading.Thread(target=GetOption ,args=(q,))
         t5 = threading.Thread(target=GetFunc ,args=(fname,))
-​
         t1.start()
         t2.start()
         #t3.start()
-        #t4.start()
-        t5.start()
+        t4.start()
+        #t5.start()
