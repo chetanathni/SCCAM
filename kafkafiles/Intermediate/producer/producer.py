@@ -10,6 +10,8 @@ import sys
 import json
 import time
 from json import loads
+latestppm=0
+ppmdict={}
 #client = docker.from_env()
 #mongodb connection
 #username = os.environ['MONGO_INITDB_ROOT_USERNAME']
@@ -52,8 +54,7 @@ for i in cursor:
 #act as consumer to get edge data from all VMs sending to a particular topic and set it to variable data
 def GetFunc(fname):
         InputTopicName = 'functionName'
-        consumerFunc= KafkaConsumer (InputTopicName, group_id = 'group2', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), 
-auto_offset_reset = 'latest')
+        consumerFunc= KafkaConsumer (InputTopicName, group_id = 'group2', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
         consumerFunc.subscribe(InputTopicName)
         for Funcname in consumerFunc:
                 Function_name=(Funcname.value).decode('utf-8')
@@ -64,26 +65,26 @@ auto_offset_reset = 'latest')
                 print(list(cursor))
 def GetOption(q,client):
         OptionTopicName = 'OptionName'
-        #global client
-        OptionConsumer= KafkaConsumer (OptionTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0
-), auto_offset_reset = 'latest')
+        global ppmdict
+        OptionConsumer= KafkaConsumer (OptionTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
         OptionConsumer.subscribe(OptionTopicName)
         for OptionName in OptionConsumer:
                 Option=(OptionName.value).decode('utf-8')
                 print(Option)
-                if (Option!='None' and Option!='NOne' and Option!='flaski/flaski'):
+                #Option="tremendouscookie47/hello"
+                if (Option!='None' and Option!='none' and len(Option)>1 and Option!='NOne' and Option!='flaski/flaski'):
                      for line in client.pull(Option,stream=True,decode=True):
                              print(json.dumps(line, indent=4))
                      op = client.create_container(Option)
-                     os.system("docker run "+Option)
+                     #os.system(f'docker run {Option}')
+                     os.system(f"docker run {Option} python test.py {list(ppmdict.values())[0]} {list(ppmdict.values())[1]} ")
                      #print(client.top(op,ps_args=None))
                      #print(client.start(container=op['Id']))
                      #x=client.images.pull(Option)
                      #client.containers.run(Option,"echo received")
 def GetFile(r):
         InputTopicName = 'InputImage'
-        consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), 
-auto_offset_reset = 'latest')
+        consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
         consumerFile.subscribe(InputTopicName)
         for Filename in consumerFile:
                 Docker_image=(Filename.value).decode('utf-8')
@@ -91,26 +92,28 @@ auto_offset_reset = 'latest')
                 print(Docker_image)
 def SendFile(r):
         InputTopicName = 'FileName'
-        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).enco
-de('utf-8'))
+        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
         while(1):
                 Dockerfile=r.get()
                 producer.send(InputTopicName,Dockerfile)
                 producer.flush()
 def GetData(q):
+        global ppmdict
         #global SentCity,SentArea,SentData
         DataTopicName = 'sample'
-        consumerData = KafkaConsumer (DataTopicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(
-0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
+        consumerData = KafkaConsumer (DataTopicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         for message in consumerData:
                 x=message.value
                 #print(collection.insert(x))    #send all the data to intermediate DB
                 area=x["area"].split("-")
+                #print(area)
                 SentCity=area[0]
                 SentArea=area[1]
                 date=x["date"]
                 time=x["time"]
                 ppm=x["ppm"]
+                ppmdict[f'{area}']=ppm
+                #ppmq.put(ppm)
                 CPU=x["CPU"]
                 total_RAM=x["total_RAM"]
                 used_RAM=x["used_RAM"]
@@ -129,8 +132,7 @@ def GetData(q):
 def GetLoc():
         global GetCity,GetArea
         LocationTopicName = 'LocationReq'
-        consumerLocn= KafkaConsumer (LocationTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0
-), auto_offset_reset = 'latest')
+        consumerLocn= KafkaConsumer (LocationTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
         consumerLocn.subscribe(LocationTopicName)
         for Locmessage in consumerLocn:
                 loc=(Locmessage.value)
@@ -140,9 +142,7 @@ def GetLoc():
                 print("Got these "+GetCity+" "+GetArea)
 def filters(q):
                 sendingTopic = 'filtered'
-                producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps
-(v).encode('utf-8'))
-
+                producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
                 while(1):
                         SentData=q.get()
                         #collection_backend.insert(SentData)   #send filtered data to DB {need to send the dict}
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         t1 = threading.Thread(target=GetData ,args=(q,))
         t2 = threading.Thread(target=filters ,args=(q,))
         t3 = threading.Thread(target=GetLoc)
-        t4 = threading.Thread(target=GetOption ,args=(q,client,))
+        t4 = threading.Thread(target=GetOption ,args=(q,client))
         t5 = threading.Thread(target=GetFunc ,args=(fname,))
         t1.start()
         t2.start()
