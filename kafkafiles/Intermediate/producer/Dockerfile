@@ -1,4 +1,6 @@
 FROM python:3.6
+WORKDIR /app
 RUN pip install kafka  
-COPY ./ /app
-CMD ["python","-u","/app/producer.py"]
+RUN pip install pymongo
+COPY . .
+CMD ["python","-u","producer.py"]
