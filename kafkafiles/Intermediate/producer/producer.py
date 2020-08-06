@@ -37,20 +37,7 @@ bootstrap_servers = ['kafka:9092']
 sending_server = ['kafka:9092']
 GetArea=''
 GetCity=''
-'''
-pipeline = [
-  {
-       "$group":
-         {
-           "_id": "$area",
-           "avgQuantity": { "$avg": "$ppm" }
-         }
-     }
-]
-cursor = collection.aggregate(pipeline)
-for i in cursor:
-        print(i)
-'''
+
 #act as consumer to get edge data from all VMs sending to a particular topic and set it to variable data
 def GetFunc(fname):
         InputTopicName = 'functionName'
@@ -82,14 +69,7 @@ def GetOption(q,client):
                      #print(client.start(container=op['Id']))
                      #x=client.images.pull(Option)
                      #client.containers.run(Option,"echo received")
-def GetFile(r):
-        InputTopicName = 'InputImage'
-        consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
-        consumerFile.subscribe(InputTopicName)
-        for Filename in consumerFile:
-                Docker_image=(Filename.value).decode('utf-8')
-                r.put(Docker_image)
-                print(Docker_image)
+
 def SendFile(r):
         InputTopicName = 'FileName'
         producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
@@ -127,8 +107,7 @@ def GetData(q):
                         print("Data forwarded to backend ")
                         print(datalist)
                 """
-#push to db
-#act as consumer to get location from backend
+
 def GetLoc():
         global GetCity,GetArea
         LocationTopicName = 'LocationReq'
