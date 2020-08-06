@@ -37,19 +37,22 @@ bootstrap_servers = ['kafka:9092']
 sending_server = ['kafka:9092']
 GetArea=''
 GetCity=''
-
+'''
+pipeline = [
+  {
+       "$group":
+         {
+           "_id": "$area",
+           "avgQuantity": { "$avg": "$ppm" }
+         }
+     }
+]
+cursor = collection.aggregate(pipeline)
+for i in cursor:
+        print(i)
+'''
 #act as consumer to get edge data from all VMs sending to a particular topic and set it to variable data
-def GetFunc(fname):
-        InputTopicName = 'functionName'
-        consumerFunc= KafkaConsumer (InputTopicName, group_id = 'group2', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
-        consumerFunc.subscribe(InputTopicName)
-        for Funcname in consumerFunc:
-                Function_name=(Funcname.value).decode('utf-8')
-                fname.put(Function_name)
-                pipeline = [{"$group":{"_id": "$area","val": { "${}".format(Function_name): "$ppm" }}}]
-                cursor = collection.aggregate(pipeline)
-                #sval.put(cursor[0]['value'])
-                print(list(cursor))
+                
 def GetOption(q,client):
         OptionTopicName = 'OptionName'
         global ppmdict
@@ -69,7 +72,14 @@ def GetOption(q,client):
                      #print(client.start(container=op['Id']))
                      #x=client.images.pull(Option)
                      #client.containers.run(Option,"echo received")
-
+def GetFile(r):
+        InputTopicName = 'InputImage'
+        consumerFile= KafkaConsumer (InputTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
+        consumerFile.subscribe(InputTopicName)
+        for Filename in consumerFile:
+                Docker_image=(Filename.value).decode('utf-8')
+                r.put(Docker_image)
+                print(Docker_image)
 def SendFile(r):
         InputTopicName = 'FileName'
         producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
@@ -84,14 +94,14 @@ def GetData(q):
         consumerData = KafkaConsumer (DataTopicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         for message in consumerData:
                 x=message.value
-                #print(collection.insert(x))    #send all the data to intermediate DB
+                #collection.insert(x)    #send all the data to intermediate DB
                 area=x["area"].split("-")
                 #print(area)
                 SentCity=area[0]
                 SentArea=area[1]
                 date=x["date"]
                 time=x["time"]
-                ppm=x["ppm"]
+                ppm=round(x["ppm"],3)
                 ppmdict[f'{area}']=ppm
                 #ppmq.put(ppm)
                 CPU=x["CPU"]
@@ -101,29 +111,72 @@ def GetData(q):
                 datalist=[ppm,CPU,total_RAM,used_RAM,percent_used]
                 #print(datalist)
                 q.put(datalist)
-                """   if(GetCity==SentCity and GetArea==SentArea):
-                        print("Match found")
+                '''if(GetCity==SentCity and GetArea==SentArea):
                         q.put(datalist) 
-                        print("Data forwarded to backend ")
+                        print("Data forwarded to backend ", end=" ")
                         print(datalist)
-                """
-
-def GetLoc():
+                '''
+                
+#push to db
+#act as consumer to get location from backend
+def GetLoc(locq):
         global GetCity,GetArea
         LocationTopicName = 'LocationReq'
         consumerLocn= KafkaConsumer (LocationTopicName, group_id = 'group1', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
         consumerLocn.subscribe(LocationTopicName)
         for Locmessage in consumerLocn:
                 loc=(Locmessage.value)
-                locList=loc.decode('utf-8').split(' ')
+                locList=loc.decode('utf-8').split('-')
                 GetArea=locList[1]
                 GetCity=locList[0]
                 print("Got these "+GetCity+" "+GetArea)
+                locq.put(loc)  
+'''                                
+def SendAgg(locq):
+        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
+        while(1):
+                reqdData=['min','max','avg']
+                loc=locq.get()
+                dataToSend=[]
+                for func in reqdData:
+                            Function_name=func
+                        pipeline = [{"$group":{"_id": "$area","val": { "${}".format(Function_name): "$ppm" }}}]
+                        cursor = collection.aggregate(pipeline)
+                        genData=list(cursor)
+                        print(genData)
+                        dataToSend.append(genData[0]['val'])
+                aggTopic='aggVal' 
+                print("Aggregate data sent is ", end=" ")
+                print(dataToSend)
+                producer.send(aggTopic,dataToSend)
+                producer.flush()
+'''
+
+
+
+
+                
 def filters(q):
                 sendingTopic = 'filtered'
                 producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
+
+
                 while(1):
                         SentData=q.get()
+                        pipeline1 = [{"$group":{"_id": "$area","val": { "$min": "$ppm" }}}]
+                        pipeline2 = [{"$group":{"_id": "$area","val": { "$max": "$ppm" }}}]
+                        pipeline3 = [{"$group":{"_id": "$area","val": { "$avg": "$ppm" }}}]
+                        #loc=locq.get()
+                        dataToSend=[]
+                        cursor1 = collection.aggregate(pipeline1)
+                        cursor2 = collection.aggregate(pipeline2)
+                        cursor3 = collection.aggregate(pipeline3)
+                        genData1=list(cursor1)
+                        genData2=list(cursor2)
+                        genData3=list(cursor3)
+                        SentData.append(round(genData1[1]['val'],3))
+                        SentData.append(round(genData2[1]['val'],3))
+                        SentData.append(round(genData3[1]['val'],3))
                         #collection_backend.insert(SentData)   #send filtered data to DB {need to send the dict}
                         producer.send(sendingTopic,SentData)
                         producer.flush()
@@ -131,16 +184,15 @@ if __name__ == "__main__":
     # creating thread
         q = queue.Queue()
         r = queue.Queue()
+        locq = queue.Queue()
         client = docker.APIClient(base_url='unix://var/run/docker.sock')
         #client = client(base_url='unix://var/run/docker.sock')
         fname = queue.Queue()
         t1 = threading.Thread(target=GetData ,args=(q,))
         t2 = threading.Thread(target=filters ,args=(q,))
-        t3 = threading.Thread(target=GetLoc)
+        t3 = threading.Thread(target=GetLoc,args=(locq,))
         t4 = threading.Thread(target=GetOption ,args=(q,client))
-        t5 = threading.Thread(target=GetFunc ,args=(fname,))
         t1.start()
         t2.start()
-        #t3.start()
+        t3.start()
         t4.start()
-        #t5.start()
