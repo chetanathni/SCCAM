@@ -91,8 +91,7 @@ auto_offset_reset = 'latest')
                 print(Docker_image)
 def SendFile(r):
         InputTopicName = 'FileName'
-        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).enco
-de('utf-8'))
+        producer = KafkaProducer(bootstrap_servers = sending_server, api_version=(0,10,0),value_serializer = lambda v: json.dumps(v).encode('utf-8'))
         while(1):
                 Dockerfile=r.get()
                 producer.send(InputTopicName,Dockerfile)
