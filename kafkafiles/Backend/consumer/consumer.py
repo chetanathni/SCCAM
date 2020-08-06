@@ -7,8 +7,6 @@ import random
 import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from collections import deque
-import requests
-import numpy as np
 import datetime
 import time
 import random
@@ -20,15 +18,7 @@ from plotly import tools
 from plotly import subplots
 from kafka import KafkaConsumer,KafkaProducer
 
-bootstrap_servers = ['kafka:9092']
-def rec_agg(agg_rec):
-        topicName5 = 'aggVal'
-        consumer5= KafkaConsumer (topicName5, group_id = 'group3', bootstrap_servers = bootstrap_servers, api_version = (0,10,0), auto_offset_reset = 'latest')
-        consumer5.subscribe(topicName5)
-        for aggval in consumer5:
-                agg_val=(aggval.value).decode('utf-8')
-                agg_rec.put(agg_val)
-                
+bootstrap_servers = ['35.202.64.85:9092']
 def docker_data(docker_image):
 
     topicName3 ='OptionName'
@@ -47,7 +37,7 @@ def user_ch(pr):
         producer.send(topicName2 , choice_us.encode('utf-8'))
         producer.flush()
 
-def graph_info(q,t):
+def graph_info(q,t,agg_rec):
 
     topicName = 'filtered'
     consumer = KafkaConsumer (topicName, group_id = 'test-consumer-group',bootstrap_servers = bootstrap_servers,api_version=(0,10,0),auto_offset_reset = 'latest',value_deserializer=lambda m: json.loads(m.decode('utf-8')))
@@ -57,9 +47,10 @@ def graph_info(q,t):
         y=message.value
         q.put(y[0])
         t.put(y[1:5])
+        agg_rec.put(y[-3:])
 
 
-BS = "https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/solar/bootstrap.min.css"
+BS = "https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/slate/bootstrap.min.css"
 app = dash.Dash(__name__,external_stylesheets=[BS])
 app.config['suppress_callback_exceptions'] = True
 
@@ -163,10 +154,10 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
                         dcc.Dropdown(
                         id='loc-dropdown',
                         options=[
-                            {'label': 'HSR Layout', 'value': 'HSR'},
-                            {'label': 'Bellanduru', 'value': 'Bellandur'},
+                            {'label': 'HSR Layout', 'value': 'bangalore-HSR'},
+                            {'label': 'Bellanduru', 'value': 'bangalore-Bellandur'},
                         ],
-                        value='HSR',
+                        value='bangalore-HSR',
                         style={'width':'50%',"background-color": 'rgba(0,0,0,0)',"display":'inline-block',"color":"black"}),
                 
                     dcc.Dropdown(
@@ -182,7 +173,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
                         value='Line',
                         style={'width':'50%',"background-color": 'rgba(0,0,0,0)',"display":'inline-block',"color":"black"}),
                     ],style={"float":"left","display":'inline-block',"justify-content":"space-between","background-color": 'rgb(191, 191, 191)'}),
-                        html.P('Air-Quality',style={"font-size":30,"margin-left":"15%","margin-top":"5%"}),
+                        html.P('Air-Quality',style={"font-size":25,"margin-left":"15%","margin-top":"5%"}),
                         dcc.Graph(id='live-graph', animate=True ,style={'width': 700,'height' : 550, 'align':'center' }),
                         dcc.Interval(
                             id='graph-update',
@@ -198,7 +189,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
                     
                         html.Br(),html.Hr(style={'border':'5px solid black'}),
                             dbc.Row([
-                                html.P('Aggregate Values',style={"font-size":30,"margin-left":"15%"}),
+                                html.P('Aggregate Values',style={"font-size":25,"margin-left":"15%"}),
                                 html.Div([
                             #html.P('Aggregate Values',style={"font-size":20,"margin-left":"15%"}),
                             dcc.Graph(id='live-update-graph-bar'),
@@ -225,7 +216,7 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
                 html.Div(id="ram-used-div",className="ram-used-div",children=
                     [
                         html.P('RAM Usage', style={'fontSize':25,'margin-left':'40.5    %'}),
-                        html.P(f'{random.randint(1,8)} of 8 GB '  , style={'fontSize':35,'margin-left':'40%'},id="ram_used_val")
+                        html.P(id="ram_used_val",children=[])
                     ],style={
                         'padding':5,
                     }
@@ -269,9 +260,9 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
     
     
     
-    def empty_graph(X,Y,xaxis_column_name):
+    def empty_graph(X,Y,input_data):
 
-        pr.put(xaxis_column_name)
+        pr.put(input_data)
 
         Y.clear()
         Y.append(0)
@@ -282,13 +273,16 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
     @app.callback([Output('live-graph', 'figure'),Output('current_ppmval',"children")],[Input('graph-update', 'n_intervals'),Input('demo-dropdown', 'value')])
     def update_graph_scatter(input_data,value):
         
-        #prev = r.get()
-        #if(input_data!=prev):
+        prev = r.get()
+        if(input_data!=prev):
+            pr.put(input_data)
+
             #empty_graph(X,Y,input_data)
             #q.queue.clear()
             #t.queue.clear()
 
         r.put(input_data)
+        pr.put(input_data)
 
         ppmval = q.get()
         X.append(X[-1]+1)
@@ -343,11 +337,11 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
             
             fig.append_trace(go.Scatter(x=list(A),y=list(B),name='CPU',mode= 'lines',marker_color='rgb(179, 179, 255)',fill='tonexty'),1,1)
             fig.append_trace(go.Scatter(x=list(U),y=list(V),name='Disk',mode= 'lines',marker_color='rgb(217, 179, 255)',fill='tonexty'),1,2)
-            fig.update_layout(height=500, width=1600, title_text="System Usage",showlegend=False,paper_bgcolor = 'rgba(0,0,0,0)',plot_bgcolor = 'rgba(0,0,0,0)',font_color='white')
+            fig.update_layout(height=500, width=1400, title_text="System Usage",showlegend=False,paper_bgcolor = 'rgba(0,0,0,0)',plot_bgcolor = 'rgba(0,0,0,0)',font_color='white')
             fig.update_xaxes(gridcolor='rgba(0,0,0,0)',title_text="Percentage (%)")
             fig.update_yaxes(gridcolor='rgba(0,0,0,0)',title_text="Time (seconds)")
             
-            new_val = html.P(f'{used_ram} of {total_ram} GB '  , style={'fontSize':35,'margin-left':'40%'},id="ram_used_val")
+            new_val = html.P(f'{used_ram} of {total_ram} '  , style={'fontSize':35,'margin-left':'40%'},id="ram_used_val")
             
             return [fig , new_val]
         
@@ -355,12 +349,13 @@ def dash_thread(q,r,t,pr,docker_image,agg_rec):
     def update_graph_bar(n_intervals2):
         
         agg_vals = agg_rec.get()
+        print(type(agg_vals))
         M.append(agg_vals[0])
-        M.append(agg_vals[2])
         M.append(agg_vals[1])
+        M.append(agg_vals[2])
         data_bar = go.Bar(
                 x=list(M),
-                y=['Min', 'Avg', 'Max'],
+                y=['Min', 'Max', 'Avg'],
                 orientation='h',
                 text=list(M),
                 marker=dict(color=['rgb(0, 204, 204)','rgb(140, 26, 255)','rgb(255, 26, 83)']
@@ -381,19 +376,19 @@ if __name__ == "__main__":
     docker_image = queue.Queue()
     pr = queue.Queue()
     agg_rec = queue.Queue()
-    r.put('HSR')
-    pr.put('HSR')
+    r.put('bangalore-HSR')
+    pr.put('bangalore-HSR')
 
     t1 = threading.Thread(target=dash_thread ,args=(q,r,t,pr,docker_image,agg_rec))
-    t2 = threading.Thread(target=graph_info ,args=(q,t))
+    t2 = threading.Thread(target=graph_info ,args=(q,t,agg_rec))
     t3 = threading.Thread(target=user_ch , args=(pr,))
     t4 = threading.Thread(target=docker_data , args=(docker_image,))
-    t6 = threading.Thread(target=rec_agg , args=(agg_rec,))
+    #t6 = threading.Thread(target=rec_agg , args=(agg_rec,))
 
     t1.start()
     t3.start()
     t2.start()
     t4.start()
-    t6.start()
+    #t6.start()
     
-    app.run_server(debug=True,host='0.0.0.0')
+    app.run_server(host='0.0.0.0')
